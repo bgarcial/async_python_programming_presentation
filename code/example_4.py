@@ -1,7 +1,7 @@
 """
 example_4.py
 
-Just a short example demonstraing a simple state machine in Python
+Just a short example demonstrating a simple state machine in Python
 However, this one has delays that affect it
 """
 
@@ -10,21 +10,21 @@ from gevent import monkey
 monkey.patch_all()
 
 import time
-import Queue
+import queue
 from lib.elapsed_time import ET
 
 
-def task(name, queue):
-    while not queue.empty():
-        count = queue.get()
+def task(name, work_queue):
+    while not work_queue.empty():
+        count = work_queue.get()
         total = 0
         et = ET()
         for x in range(count):
-            print 'Task %s running' % name
+            print(f'Task {name} running')
             time.sleep(1)
             total += 1
-        print 'Task %s total: %s' % (name, total)
-        print 'Task %s total elapsed time: %2.1f' % (name, et())
+        print(f'Task {name} total: {total}')
+        print(f'Task {name} total elapsed time: {et():.1f}')
 
 
 def main():
@@ -32,20 +32,21 @@ def main():
     This is the main entry point for the programWhen
     """
     # create the queue of 'work'
-    queue = Queue.Queue()
+    work_queue = queue.Queue()
 
     # put some 'work' in the queue
-    map(queue.put, [15, 10, 5, 2])
+    for work in [15, 10, 5, 2]:
+        work_queue.put(work)
 
     # run the tasks
     et = ET()
     tasks = [
-        gevent.spawn(task, 'One', queue),
-        gevent.spawn(task, 'Two', queue)
+        gevent.spawn(task, 'One', work_queue),
+        gevent.spawn(task, 'Two', work_queue)
     ]
     gevent.joinall(tasks)
-    print
-    print 'Total elapsed time: %2.1f' % et()
+    print()
+    print(f'Total elapsed time: {et():.1f}')
 
 
 if __name__ == '__main__':

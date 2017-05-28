@@ -1,12 +1,12 @@
 """
 example_2.py
 
-Just a short example demonstraing a simple state machine in Python
+Just a short example demonstrating a simple state machine in Python
 However, this one has delays that affect it
 """
 
 
-import Queue
+import queue
 
 
 def task(name, queue):
@@ -14,25 +14,26 @@ def task(name, queue):
         count = queue.get()
         total = 0
         for x in range(count):
-            print 'Task %s running' % name
+            print(f'Task {name} running')
             total += 1
             yield
-        print 'Task %s total: %s' % (name, total)
+        print(f'Task {name} total: {total}')
 
 def main():
     """
     This is the main entry point for the program
     """
     # create the queue of 'work'
-    queue = Queue.Queue()
+    work_queue = queue.Queue()
 
     # put some 'work' in the queue
-    map(queue.put, [15, 10, 5, 2])
+    for work in [15, 10, 5, 2]:
+        work_queue.put(work)
 
     # create some tasks
     tasks = [
-        task('One', queue),
-        task('Two', queue)
+        task('One', work_queue),
+        task('Two', work_queue)
     ]
 
     # run the tasks
@@ -40,7 +41,7 @@ def main():
     while not done:
         for t in tasks:
             try:
-                t.next()
+                next(t)
             except StopIteration:
                 tasks.remove(t)
             if len(tasks) == 0:

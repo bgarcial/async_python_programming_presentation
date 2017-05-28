@@ -1,24 +1,24 @@
 """
 example_5.py
 
-Just a short example demonstraing a simple state machine in Python
+Just a short example demonstrating a simple state machine in Python
 This version is doing actual work, downloading the contents of
 URL's it gets from a queue
 """
 
-import Queue
+import queue
 import requests
 from lib.elapsed_time import ET
 
 
-def task(name, queue):
-    while not queue.empty():
-        url = queue.get()
-        print 'Task %s getting URL: %s' % (name, url)
+def task(name, work_queue):
+    while not work_queue.empty():
+        url = work_queue.get()
+        print(f'Task {name} getting URL: {url}')
         et = ET()
         requests.get(url)
-        print 'Task %s got URL: %s' % (name, url)
-        print 'Task %s total elapsed time: %2.1f' % (name, et())
+        print(f'Task {name} got URL: {url}')
+        print(f'Task {name} total elapsed time: {et():.1f}')
         yield
 
 
@@ -27,21 +27,22 @@ def main():
     This is the main entry point for the program
     """
     # create the queue of 'work'
-    queue = Queue.Queue()
+    work_queue = queue.Queue()
 
     # put some 'work' in the queue
-    map(queue.put, [
+    for url in [
         "http://google.com",
         "http://yahoo.com",
         "http://linkedin.com",
         "http://shutterfly.com",
         "http://mypublisher.com",
         "http://facebook.com"
-    ])
+    ]:
+        work_queue.put(url)
 
     tasks = [
-        task('One', queue),
-        task('Two', queue)
+        task('One', work_queue),
+        task('Two', work_queue)
     ]
     # run the scheduler to run the tasks
     et = ET()
@@ -49,14 +50,14 @@ def main():
     while not done:
         for t in tasks:
             try:
-                t.next()
+                next(t)
             except StopIteration:
                 tasks.remove(t)
             if len(tasks) == 0:
                 done = True
 
-    print
-    print 'Total elapsed time: %2.1f' % et()
+    print()
+    print(f'Total elapsed time: {et():.1f}')
 
 
 if __name__ == '__main__':
