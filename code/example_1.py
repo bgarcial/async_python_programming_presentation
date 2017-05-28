@@ -4,19 +4,19 @@ example_1.py
 Just a short example showing synchronous running of 'tasks'
 """
 
-import Queue
+import queue
 
-def task(name, queue):
-    if queue.empty():
-        print 'Task %s nothing to do' % name
+def task(name, work_queue):
+    if work_queue.empty():
+        print(f'Task {name} nothing to do')
     else:
-        while not queue.empty():
-            count = queue.get()
+        while not work_queue.empty():
+            count = work_queue.get()
             total = 0
             for x in range(count):
-                print 'Task %s running' % name
+                print(f'Task {name} running')
                 total += 1
-            print 'Task %s total: %s' % (name, total)
+            print(f'Task {name} total: {total}')
 
 
 def main():
@@ -24,15 +24,16 @@ def main():
     This is the main entry point for the program
     """
     # create the queue of 'work'
-    queue = Queue.Queue()
+    work_queue = queue.Queue()
 
     # put some 'work' in the queue
-    map(queue.put, [15, 10, 5, 2])
+    for work in [15, 10, 5, 2]:
+        work_queue.put(work)
 
     # create some tasks
     tasks = [
-        (task, 'One', queue),
-        (task, 'Two', queue)
+        (task, 'One', work_queue),
+        (task, 'Two', work_queue)
     ]
 
     # run the tasks
