@@ -15,18 +15,19 @@ import queue
 from lib.elapsed_time import ET
 
 
-def my_task(name, queue):
-    def success_callback(results):
-        print(f'Task {name} got URL: {url}')
-        print(f'Task {name} total elapsed time: {et():.1f}')
+def success_callback(results, name, url, et):
+    print(f'Task {name} got URL: {url}')
+    print(f'Task {name} total elapsed time: {et():.1f}')
 
+
+def my_task(name, queue):
     if not queue.empty():
         while not queue.empty():
             url = queue.get()
             print(f'Task {name} getting URL: {url}')
             et = ET()
             d = getPage(url)
-            d.addCallback(success_callback)
+            d.addCallback(success_callback, name, url, et)
             yield d
 
 
