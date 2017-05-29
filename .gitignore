@@ -1,0 +1,8 @@
+*.pyc
+
+# Mac stuff
+.DS_Store
+.DS_Store?
+
+# Pycharm stuff
+.idea
