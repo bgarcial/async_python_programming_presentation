@@ -221,11 +221,11 @@ if __name__ == '__main__':
 
 ```
 
-When this program is run the output shows that both task one and two are running, consuming work from the queue and processing it as before. With the addition of the mock IO delay, we're seeing that our cooperative concurrency hasn't gotten us anything, the delay stops the processing of the entire program, and the CPU just waits for the IO delay to be over. This is exactly what's meant by "block code" in asynchronous documentation. Notice the time it takes the run the entire program, this is the cummulative time of the all the delays. This again shows running things this way is not a win.
+When this program is run the output shows that both task one and two are running, consuming work from the queue and processing it as before. With the addition of the mock IO delay, we're seeing that our cooperative concurrency hasn't gotten us anything, the delay stops the processing of the entire program, and the CPU just waits for the IO delay to be over. This is exactly what's meant by "blocking code" in asynchronous documentation. Notice the time it takes the run the entire program, this is the cummulative time of the all the delays. This again shows running things this way is not a win.
 
 ## Cooperative Concurrency - With Non-Blocking Calls (Gevent)
 
-The next version of the program (example_4.py) has been modified quite a bit. It makes use of the Gevent asynchronous programming module right at the top of the program. The module is imported, along with a module called monkey. Then a method of the monkey module is called, patch_all(). What in the world is that doing? The simple explanation is it sets the program up so any other module imported that has blocking (synchronous) code in it is 'patched' to make them asynchronous. Like most simple explanations, this isn't very helpful. What it means in relation to our example program is the time.sleep(1) (our mock IO delay) no longer 'blocks' the program. Instead it yields control cooperatively back to the system. Notice the 'yield' statement from example_3.py is no longer present. So, if the time.sleep(1) function has been patched by Gevent to yield control, where is the control going? One of the effects of using gevent is that it starts an event loop thread in the program. For our purposes this is like the 'run the tasks' loop from example_3.py. When the time.sleep(1) delay ends, it returns control to the next executable statement after the time.sleep(1) statement. The advantage of this behavior is the CPU is no longer blocked by the delay, but is free to execute other code.
+The next version of the program (example_4.py) has been modified quite a bit. It makes use of the Gevent asynchronous programming module right at the top of the program. The module is imported, along with a module called monkey. Then a method of the monkey module is called, patch_all(). What in the world is that doing? The simple explanation is it sets the program up so any other module imported having blocking (synchronous) code in it is 'patched' to make it asynchronous. Like most simple explanations, this isn't very helpful. What it means in relation to our example program is the time.sleep(1) (our mock IO delay) no longer 'blocks' the program. Instead it yields control cooperatively back to the system. Notice the 'yield' statement from example_3.py is no longer present. So, if the time.sleep(1) function has been patched by Gevent to yield control, where is the control going? One of the effects of using gevent is that it starts an event loop thread in the program. For our purposes this is like the 'run the tasks' loop from example_3.py. When the time.sleep(1) delay ends, it returns control to the next executable statement after the time.sleep(1) statement. The advantage of this behavior is the CPU is no longer blocked by the delay, but is free to execute other code.
 
 Our 'run the tasks' loop no longer exists, instead our task array contains two calls to gevent.spawn(...). These two calls start two Gevent threads (called greenlets), which are lightweight microthreads that context switch cooperatively, rather than as a result of the system switching contexts like regular threads. Notice the gevent.joinall(tasks) right after our tasks are spawned. This statement causes are program to wait till task one and task two are both finished. Without this our program would have continued on through the print statements, but with essentially nothing to do.
 
@@ -288,13 +288,13 @@ if __name__ == '__main__':
 
 ```
 
-When this program runs, notice both task one and two start at the same time, then wait at the mock IO call. This is an indication the time.sleep(1) call is no longer blocking, and other work is being done. At the end of the program notice the total elapsed time, it's essentially half the time it took for example_3.py to run. Now we're starting to see the advantages of an asynchronous program, being able to run two, or more, things concurrently by running IO processes in a non-blocking manner. By using the Gevent greenlets and controlling the context switches, we're able to multiplex between tasks without to much trouble.
+When this program runs, notice both task one and two start at the same time, then wait at the mock IO call. This is an indication the time.sleep(1) call is no longer blocking, and other work is being done. At the end of the program notice the total elapsed time, it's essentially half the time it took for example_3.py to run. Now we're starting to see the advantages of an asynchronous program. Being able to run two, or more, things concurrently by running IO processes in a non-blocking manner. By using Gevent greenlets and controlling the context switches, we're able to multiplex between tasks without to much trouble.
 
 ## Cooperative Concurrency - Doing Real Work, With Blocking Calls
 
-The next version of the program (example_5.py) is kind of a step forward and step back. The program now is doing some actual work with real IO, making HTTP requests to a list of URLs and getting the page contents, but it's doing so in a blocking (synchronous) manner. We've modified the program to import the wonderful requests module to make the actual HTTP requests, and added a list of URLs to the queue rather than numbers. Inside the task rather than increment a counter, we're using the requests module to get the contents of a URL gotten from the queue, and printing how long it took to do so.
+The next version of the program (example_5.py) is kind of a step forward and step back. The program now is doing some actual work with real IO, making HTTP requests to a list of URLs and getting the page contents, but it's doing so in a blocking (synchronous) manner. We've modified the program to import the wonderful requests module to make the actual HTTP requests, and added a list of URLs to the queue rather than numbers. Inside the task, rather than increment a counter, we're using the requests module to get the contents of a URL gotten from the queue, and printing how long it took to do so.
 
-I've also included a simple Elapsed Time class to handle the start time, elapsed time features used in the reporting.
+I've also included a simple Elapsed Time class to handle the start time/elapsed time features used in the reporting.
 
 ### Example 5
 
@@ -366,7 +366,7 @@ if __name__ == '__main__':
 
 ```
 
-As in an earlier version of the program, we're using a yield to turn our task function into a generator, and perform a context switch in order to let the other task instance run. Each task gets a URL from the work queue, gets the contents of the page pointed to by the URL and reports how long it took to get that content. As before, the yield allows both our tasks to run, but because this program is running synchrnously, each request get call blocks the CPU till the page is retrieved. Notice the total time to run the entire program at the end, this will be meaningful for the next example.
+As in an earlier version of the program, we're using a yield to turn our task function into a generator, and perform a context switch in order to let the other task instance run. Each task gets a URL from the work queue, gets the contents of the page pointed to by the URL and reports how long it took to get that content. As before, the yield allows both our tasks to run, but because this program is running synchrnously, each requests.get() call blocks the CPU till the page is retrieved. Notice the total time to run the entire program at the end, this will be meaningful for the next example.
 
 ## Cooperative Concurrency - Doing Real Work, With Non-Blocking Calls (Gevent)
 
@@ -439,9 +439,9 @@ At the end of this program run, take a look at the total time for the program to
 
 ## Cooperative Concurrency - Doing Real Work, With Non-Blocking Calls (Twisted)
 
-This version of the program (example_7.py) uses the Twisted module to do essentially the same thing as the Gevent module, download the URL contents in a non-blocking manner. Twisted is a very powerful system, and takes a fundementally different approach to create asynchronous programs. Where Gevent modifies modules to make their synchronous code asynchronous, Twisted provides it's own functions and methods to reach the same ends. Where example_6.py used the patched requests.get() call to get the contents of the URLs, here we use the Twisted function getPage(url).
+This version of the program (example_7.py) uses the Twisted module to do essentially the same thing as the Gevent module, download the URL contents in a non-blocking manner. Twisted is a very powerful system, and takes a fundementally different approach to create asynchronous programs. Where Gevent modifies modules to make their synchronous code asynchronous, Twisted provides it's own functions and methods to reach the same ends. Where example_6.py used the patched requests.get(url) call to get the contents of the URLs, here we use the Twisted function getPage(url).
 
-In this version the @defer.inlineCallbacks works together with the 'yield getPage(url)' to perform a context switch into the Twisted event loop. In Gevent the event loop was implied, but in Twisted it's explicitely provided by the 'reactor.run()' statement line near the bottom of the program. 
+In this version the '@defer.inlineCallbacks' function decorator works together with the 'yield getPage(url)' to perform a context switch into the Twisted event loop. In Gevent the event loop was implied, but in Twisted it's explicitely provided by the 'reactor.run()' statement line near the bottom of the program. 
 
 ### Example 7
 
@@ -518,7 +518,7 @@ Notice the end result is the same as the Gevent version, the total program run t
 
 ## Cooperative Concurrency - Doing Real Work, With Non-Blocking Calls (Twisted - traditional)
 
-This version of the program (example_8.py) also uses the Twisted library, but shows a more traditional approach to using Twisted. By this I mean rather than using the @defer.inlineCallbacks / yield style of coding, this version uses explicit callbacks. A 'callback' is a function that is provided to the system and can be called later in reaction to an event. In the example below the 'success_callback()' function is provided to Twisted to be called when the getPage(url) call completes. 
+This version of the program (example_8.py) also uses the Twisted library, but shows a more traditional approach to using Twisted. By this I mean rather than using the @defer.inlineCallbacks / yield style of coding, this version uses explicit callbacks. A 'callback' is a function that is passed to the system and can be called later in reaction to an event. In the example below the 'success_callback()' function is provided to Twisted to be called when the getPage(url) call completes. 
 
 Notice in the program the '@defer.inlineCallbacks' decorator is no longer present on the my_task() function. In addtion, the function is yielding a variable called 'd', shortand for a deferred, which is what is returned by the getPage(url) function call. A deferred is Twisted way of handling asynchronous programming, and is what the callback is attached to. When this deferred 'fires' (when the getPage(url) completes), the callback function will be called with the variables defined at the time the callback was attached. 
 
@@ -602,4 +602,4 @@ The end result of running this program is the same as the previous two examples,
 
 ## Conclusion
 
-I hope this has helped you see and understand where and how asynchronous programming can be useful. If you're writing a program that's calculating PI to the millionth decimal place, asynchronous code isn't going to help at all. However, if you're trying to implement a server, or a program that does a significant amount of IO, it could make a huge difference. It's a powerful technique that can take your programs to the next leve.
+I hope this has helped you see and understand where and how asynchronous programming can be useful. If you're writing a program that's calculating PI to the millionth decimal place, asynchronous code isn't going to help at all. However, if you're trying to implement a server, or a program that does a significant amount of IO, it could make a huge difference. It's a powerful technique that can take your programs to the next level.
