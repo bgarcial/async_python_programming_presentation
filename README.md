@@ -26,7 +26,7 @@ This example illustrates both blocking and non-blocking code. While we're moving
 
 As people this is how we work, we're naturally always juggling multiple things at once, often without thinking about it. As programmers the trick is how to translate this kind of behavior into code that does kind of the same thing. Let's try to 'program' this using code ideas you might be familiar with.
 
-### The Batching Parent
+### The Synchronous Parent
 
 Think about trying to do these tasks in a completely synchronous manner. If we're a good parent in this scenario we just watch the kids, waiting for something to happen needing our attention. Nothing else, like the checkbook or laundry, would get done in this scenario. We could re-prioritize the tasks any way we want, but only one of them would happen at a time in a synchronous, one after another, manner. This would be like the synchronous web server described above, it would work, but it would be a terrible way to live. Nothing except watching the kids would get done till they were asleep, all other tasks would happen after that, well into the night. A couple of weeks of this and most parents would jump out the window.
 
